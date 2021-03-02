@@ -5,11 +5,12 @@
  *
  */
 
-$cats = get_the_category();
+$cats = wp_get_post_terms( get_the_ID(), ['category', 'post_tag'] );
 
 if ( !empty( $cats ) ){ 
     
     $cat = $cats[0]->slug;
+    
 }
 
 
