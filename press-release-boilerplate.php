@@ -43,13 +43,30 @@ class PressReleaseBoilerplate {
     
     
     
-    public function get_boilerplates( $cats ) {
+    public function get_boilerplates( $terms ) {
+        
+        //Setup term query
+        $tax_query = [ 'relation' => 'OR' ];
+        
+        foreach ( $terms as $taxonomy => $term ) {
+            
+            $tax_query[] = [
+                'taxonomy' => $taxonomy,
+                'field' => 'term_id',
+                'terms' => $term
+            ];
+        }
+        
+        
         
         $bps = get_posts( [
             'post_type' => $this->post_type,
             'posts_per_page' => -1,
-            'category__in' => $cats,
+            //'category__in' => $cats,
+            //'tag__in' => $cats,
+            'tax_query' => [ $tax_query ],
         ]);
+        
         
         
         return $bps;
@@ -63,21 +80,32 @@ class PressReleaseBoilerplate {
     
     public function insert_boilerplate( $the_content ) {
         
+        if ( is_admin() || wp_is_json_request() ) {
+            
+            return $the_content; 
+            
+        }
+        
         global $post;
         
         //Get the boilerplates that correspond to the current post
-        $current_cats = get_the_category();
+        $current_cats = get_terms( [
+           'taxonomy' => [ 'category', 'post_tag' ],
+            'object_ids' => get_the_ID(),
+        ]);
         
+
        // var_dump( $current_cats );
+        
         
         if ( !empty( $current_cats ) && is_array( $current_cats ) ) {
             
-            $cats = [];
+            $terms = [];
 
 
             foreach( $current_cats as $cat ) {
 
-                $cats[] = $cat->term_id;
+                $terms[$cat->taxonomy][] = $cat->term_id;
 
             }
             
@@ -85,8 +113,9 @@ class PressReleaseBoilerplate {
         
         
         
-        $boilerplates = $this->get_boilerplates( $cats );
+        $boilerplates = $this->get_boilerplates( $terms );
         
+      //  var_dump( $boilerplates );
         
         if ( !empty( $boilerplates ) ) {
             
@@ -164,6 +193,7 @@ class PressReleaseBoilerplate {
             'rewrite' => false,
             'taxonomies' => [
                 'category',
+                'post_tag'
             ],
         ];
 
