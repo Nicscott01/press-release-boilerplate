@@ -80,13 +80,14 @@ class PressReleaseBoilerplate {
     
     public function insert_boilerplate( $the_content ) {
         
-        if ( is_admin() || wp_is_json_request() ) {
+        if ( is_admin() || wp_is_json_request() || !( get_post_type() == 'post' ) ) {
             
             return $the_content; 
             
         }
         
         global $post;
+    
         
         //Get the boilerplates that correspond to the current post
         $current_cats = get_terms( [
